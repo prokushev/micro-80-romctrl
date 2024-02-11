@@ -21,8 +21,6 @@
 	INCLUDE	"syscalls.inc"
 
 	ORG	7400H		; По факту грузить можем в любые адреса
-
-Stack:
 Start:
 
 ; ───────────────────────────────────────────────────────────────────────
@@ -339,18 +337,6 @@ EXECN:
 Patch2:
 	JP	ReadROM		; Читаем в ОЗУ и запускаем программу
 
-RST0_0:	DW	0
-RST0_2:	DB	0
-T:	DB	8+2+2 DUP 0
-SO1:	DB 	1FH,0AH,0DH,"*ROM-DISK/32K* V3.0-24"
-	DB 	0AH,0DH," \x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14"
-SO2:	DB	0AH,0DH, 0
-SO3:	DB 	" \x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3",0dh,0ah
-	DB	"ar2-wyhod, ",0bh,0fh,"-wybor, wk-zapusk ",0
-MaxItems:
-	DB	0
-
-
 ; ───────────────────────────────────────────────────────────────────────
 ; Подпрограмма модификации относительного адреса перехода
 ; ───────────────────────────────────────────────────────────────────────
@@ -379,4 +365,19 @@ RST0:	EX	(SP),HL		; Save H,L and get next PC
 	EX	(SP),HL		; Restore H,L
 	RET
 
+RST0_0:	DW	0
+RST0_2:	DB	0
+MaxItems:
+	DB	0
+T:	DB	8+2+2 DUP 0
+;SO1:	DB 	1FH,0AH,0DH,"*ROM-DISK/32K* V3.0-24"
+SO1:	DB 	1FH, 0AH,0DH," \x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14"
+SO2:	DB	0AH,0DH, 0
+SO3:	DB 	" \x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3",0dh,0ah
+	DB	"ar2-wyhod, ",0bh,0fh,"-wybor, wk-zapusk ",0
+
+
+
 	DB	7600H-$ DUP (0FFH)
+
+Stack:
