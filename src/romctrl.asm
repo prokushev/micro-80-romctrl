@@ -62,6 +62,7 @@ BaseAddress:
 	INC	HL
 	LD	(HL), D
 	RST	0			; Ставим свой стек
+Stack:
 	LD	SP, Stack-$
 ; ───────────────────────────────────────────────────────────────────────
 ; Проверяем наличие Микро-80 (Монитор РК)
@@ -364,12 +365,10 @@ RST0_2:	DB	0
 MaxItems:
 	DB	0
 T:	DB	8+2+2 DUP 0
-;SO1:	DB 	1FH, "*ROM-DISK/32K* V3.0-24"
-SO1:	DB 	1FH,0AH,0DH," \x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14"
+SO1:	DB 	1FH, "*ROM-DISK/32K* V3.0-24"
+	DB 	0AH,0DH," \x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14"
 SO2:	DB	0AH,0DH, 0
 SO3:	DB 	" \x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3\x3",0dh,0ah
 	DB	"ar2-wyhod,",0bh,0fh,"-wybor,wk-pusk",0
 
 	DB	7600H-$ DUP (0FFH)
-
-Stack:
