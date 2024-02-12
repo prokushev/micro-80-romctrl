@@ -113,20 +113,20 @@ InputLoop:
 ; Обрабатываем меню
 ; ───────────────────────────────────────────────────────────────────────
 	CALL	InputSymbol
-	CP	0DH
+	SUB	0CH
+	JP	Z, WarmBoot
+
+	DEC	A			; 0DH
 	RST	0
 	JP	Z, ExitLoop-$
 
-	CP	1BH
+	SUB	1BH-0DH			; 1BH
 	JP	Z, WarmBoot
 
-	CP	0CH
-	JP	Z, WarmBoot
-
-	CP	1AH
+	INC	A			; 1AH
 	RST	0
 	JP	NZ, Next1-$
-	
+
 	LD	A, B
 	RST	0
 	LD	HL, MaxItems-$
@@ -137,7 +137,7 @@ InputLoop:
 	RST	0
 	JP	Next2-$
 Next1:
-	CP	19H
+	INC	A			; 19H
 	RST	0
 	JP	NZ, Next2-$
 	LD	A, B
