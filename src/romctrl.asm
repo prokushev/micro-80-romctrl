@@ -198,7 +198,9 @@ Patch1:
 	RST	0
 	LD	HL, ((T+8+2-$) & 0FFFFH)
 	LD	A, L			; высчитываем начало следующей записи
-	OR	A			; оканчивается на ноль
+	AND	0FH
+;	OR	A			; оканчивается на ноль
+	LD	A, L
 	RST	0
 	JP	Z, SKIP-$
 	OR	0FH
