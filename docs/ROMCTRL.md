@@ -46,8 +46,8 @@
 # Схемы диска
 
 ROM-диск может быть выполнен по одной из схем:
-- [Радио 1987 год №3](http://archive.radio.ru/web/1987/03/)
-- [Радио 1987 год №12](http://archive.radio.ru/web/1987/12/)
-- [Радио 1991 год №10](http://archive.radio.ru/web/1991/10/)
-- https://github.com/skiselev/radio-86rk-rom
-
+- [Радио 1987 год №3](http://archive.radio.ru/web/1987/03/) для Радио-86РК
+- [Радио 1987 год №12](http://archive.radio.ru/web/1987/12/) для Радио-86РК
+- [Радио 1991 год №10](http://archive.radio.ru/web/1991/10/) для Радио-86РК
+- https://github.com/skiselev/radio-86rk-rom для Радио-86РК
+- [Радио 1989 год №11] http://archive.radio.ru/web/1989/11/ для Микро-80
