@@ -23,12 +23,29 @@
 	INCLUDE	"syscalls.inc"
 
 ; ───────────────────────────────────────────────────────────────────────
+; Макросы для относительного перехода относительно текущего адреса.
+; Не работает для первого операнда:
+; REL LD Label1, HL - не работает
+; ───────────────────────────────────────────────────────────────────────
+
+REL	MACRO	CMD, ADDR
+	RST	0
+	IF	ARGCOUNT==2
+	CMD, (ADDR-$) & 0ffffh
+	ELSE
+	CMD-$
+	ENDIF
+	ENDM
+
+; ───────────────────────────────────────────────────────────────────────
+
+; ───────────────────────────────────────────────────────────────────────
 ; Начало.
 ; ВАЖНО! Из-за бага в ЮТ-88 стандартно загрузится первые 256 байт, а
 ; дальше опять будут повторяться эти же 256 байт. Поэтому 
 ; все действия при инициализации (до входа в цикл меню)
 ; должны умещаться в эти первые 256 байт. После настройки всего,
-; чего надо, догружаем остальные 256 байт и работаем дальше.
+; чего надо, догружаем остальные 256 байт и работаем дальше. (Не актуально?)
 ; ───────────────────────────────────────────────────────────────────────
 
 	ORG	7400H		; По факту грузить можем в любые адреса
@@ -71,15 +88,15 @@ BaseAddress:
 	LD	A, (0FFD8H)		; Проверяем наличие Микро-80 с М/80К
 	CP	038H			; Букава 'm' от приветствия
 	LD	DE, 0F9E6H		; Адрес копирования ROM-диска в Микро-80
-	RST	0
-	JP	Z, PatchROM-$		; Если да, то патчим
+
+	REL	JP Z, PatchROM		; Если да, то патчим
+
 ; ───────────────────────────────────────────────────────────────────────
-; Проверяем наличие ЮТ-88 (Монитор F)
+; Проверяем наличие ЮТ-88 (Монитор F 1.01)
 ; ───────────────────────────────────────────────────────────────────────
 	CP	023H			; Код 23h
 	LD	DE, 0FA62H		; Адрес копирования ROM-диска в ЮТ-88
-	RST	0
-	JP	Z, PatchROM-$		; Если да, то патчим
+	REL	JP Z, PatchROM		; Если да, то патчим
 ; ───────────────────────────────────────────────────────────────────────
 ; У нас Радио-86РК
 ; ───────────────────────────────────────────────────────────────────────
@@ -88,8 +105,7 @@ BaseAddress:
 ; Патчим адрес директивы чтения из ПЗУ
 ; ───────────────────────────────────────────────────────────────────────
 PatchROM:
-	RST	0
-	LD	HL, (CallReadROM+1)-$
+	REL	LD HL, CallReadROM+1
 	LD	(HL), E
 	INC	HL
 	LD	(HL), D
@@ -99,20 +115,16 @@ PatchROM:
 ; ───────────────────────────────────────────────────────────────────────
 	LD	B, 0			; Первый элемент выбран
 InputLoop:
-	RST	0
-	LD	HL, SO1-$
+	REL	LD HL, SO1
 	PUSH	HL
 	CALL	PrintString
 	POP	HL
 	LD	(HL), 0CH		; Заменяем CrlScr на Home
-	RST	0
-	CALL	SEARCHS-$
-	RST	0
-	LD	HL, MaxItems-$
+	REL	CALL SEARCHS
+	REL	LD HL, MaxItems
 	DEC	C
 	LD	(HL), C
-	RST	0
-	LD	HL, SO3-$		; Печатаем перевод строки
+	REL	LD HL, SO3		; Печатаем перевод строки
 	CALL	PrintString
 ; ───────────────────────────────────────────────────────────────────────
 ; Обрабатываем меню
@@ -122,37 +134,29 @@ InputLoop:
 	JP	Z, WarmBoot
 
 	DEC	A			; 0DH
-	RST	0
-	JP	Z, ExitLoop-$
+	REL	JP Z, ExitLoop
 
 	SUB	1BH-0DH			; 1BH
 	JP	Z, WarmBoot
 
 	INC	A			; 1AH
-	RST	0
-	JP	NZ, Next1-$
+	REL	JP NZ, Next1
 
 	LD	A, B
-	RST	0
-	LD	HL, MaxItems-$
+	REL	LD HL, MaxItems
 	CP	(HL)
-	RST	0
-	JP	Z, Next2-$
+	REL	JP Z, Next2
 	INC	B
-	RST	0
-	JP	Next2-$
+	REL	JP Next2
 Next1:
 	INC	A			; 19H
-	RST	0
-	JP	NZ, Next2-$
+	REL	JP NZ, Next2
 	LD	A, B
 	OR	A
-	RST	0
-	JP	Z, Next2-$
+	REL	JP Z, Next2
 	DEC	B
 Next2:
-	RST	0
-	JP	InputLoop-$
+	REL	JP InputLoop
 ExitLoop:
 ; ───────────────────────────────────────────────────────────────────────
 ; Изменяем возврат из функции печати на "провал" в функцию запуска программы
@@ -176,30 +180,25 @@ ExitLoop:
 SEARCHS:LD	DE, 0800H
 	LD	C, E
 SEARCH:	PUSH	BC
-	RST	0
-	LD	BC, T-$
+	REL	LD BC, T
 	LD	HL, 0FH
 	ADD	HL, DE
 	EX	HL, DE
 	PUSH	BC
-	RST	0
-	CALL	CallReadROM-$		; HL - начало, DE - конец, BC - посадка
+	REL	CALL CallReadROM; HL - начало, DE - конец, BC - посадка
 	POP	BC
 	INC	DE
 	LD	A,(BC)
 	INC	A		; Если был 0FFH, то станет 0
 	POP	BC
 	RET	Z		; Файлы кончились, выходим
-	RST	0
-	CALL	PRINTN-$
+	REL	CALL PRINTN
 	INC	C
-	RST	0
-	LD	HL, ((T+8+2-$) & 0FFFFH)
+	REL	LD HL, T+8+2
 	LD	A, L			; высчитываем начало следующей записи
 	AND	0FH
 	LD	A, L
-	RST	0
-	JP	Z, SKIP-$
+	REL	JP Z, SKIP
 	OR	0FH
 	INC	A
 	LD	L, A
@@ -207,8 +206,7 @@ SEARCH:	PUSH	BC
 SKIP:	
 	ADD	HL, DE
 	EX	DE, HL
-	RST	0
-	JP	SEARCH-$
+	REL	JP SEARCH
 
 ; ───────────────────────────────────────────────────────────────────────
 ; Подпрограмма печати записи каталога
@@ -223,21 +221,18 @@ PRINTN:
 
 	SUB	B
 	LD	C, ' '
-	RST	0
-	JP	NZ, NotActive1-$
+	REL	JP NZ, NotActive1
 	LD	C, 0EH
 NotActive1:
 	CALL	PrintCharFromC
 
 	LD	B, 8
-	RST	0
-	LD	HL, T-$
+	REL	LD	HL, T
 PLOOP:	LD	C, (HL)			; Печатаем имя
 	CALL	PrintCharFromC
 	INC	HL
 	DEC	B
-	RST	0
-	JP	NZ, PLOOP-$
+	REL	JP NZ, PLOOP
 
 	INC	HL
 	
@@ -247,26 +242,22 @@ PLOOP:	LD	C, (HL)			; Печатаем имя
 	LD	A, C
 	SUB	B
 	LD	C, ' '
-	RST	0
-	JP	NZ, NotActive2-$
+	REL	JP NZ, NotActive2
 	LD	C, 1DH
 NotActive2:
 	CALL	PrintCharFromC
-	RST	0			; Печатаем стартовый адрес
-	CALL	PrintHexWord-$
+	REL	CALL PrintHexWord	; Печатаем стартовый адрес
 
 	INC	HL
 	INC	HL
 	INC	HL
 	LD	C, ' '			; Печатаем размер
 	CALL	PrintCharFromC
-	RST	0
-	CALL	PrintHexWord-$
+	REL	CALL PrintHexWord
 
 	LD	C, 11h
 	CALL	PrintCharFromC
-	RST	0
-	LD	HL, SO2-$		; Печатаем перевод строки
+	REL	LD HL, SO2		; Печатаем перевод строки
 	CALL	PrintString
 
 	POP	BC
@@ -283,19 +274,18 @@ EXECN:
 	LD	C, 1Fh		; Очищаем экран перед запуском
 	CALL	PrintCharFromC
 	
-	RST	0
-	LD	HL, ((T+8-$) & 0ffffh)
+	REL	LD HL, T+8
 	LD	B, H
 	LD	C, L
-	RST	0
-	LD	HL, ((T+8+2-$)  & 0ffffh)
+	REL	LD HL, T+8+2
 
 	ADD	HL, DE
 	EX	DE, HL
 
 	PUSH	BC		; Адрес запуска
-	RST	0		; BUGBUG
-	JP	CallReadROM-$	; Читаем в ОЗУ и запускаем программу
+;	REL	JP CallReadROM	; Читаем в ОЗУ и запускаем программу
+CallReadROM:
+	JP	ReadROM		; Здесь потом адрес пропатчится
 	
 PrintHexWord:
 	LD	A, (HL)
@@ -332,8 +322,6 @@ RST0:	EX	(SP),HL		; Save H,L and get next PC
 	EX	(SP),HL		; Restore H,L
 	RET
 
-CallReadROM:
-	JP	ReadROM		; Здесь потом адрес пропатчится
 	
 SO1:	DB 	1FH, "*ROM-DISK/32K* V3.0-24"
 	DB 	0AH,0DH," \x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14\x14"
